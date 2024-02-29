@@ -1,0 +1,87 @@
+{
+	"info": {
+		"_postman_id": "ecb04d61-6111-48d4-bb41-a7fba474994e",
+		"name": "Vita-Link-Express",
+		"description": "API Calls for ExpressJS Vita-Link Back-End",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "19439529"
+	},
+	"item": [
+		{
+			"name": "Patients Portal",
+			"item": [
+				{
+					"name": "Valid Log-In",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"username\": \"24PAT01304\",\r\n    \"password\": \"12345\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/login",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Invalid Log-In Copy",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"username\": \"24PAT01304\",\r\n    \"password\": \"1234567890wrongpasswordhere.\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/login",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Patient Details",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/patient/details",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"patient",
+								"details"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "1. Run Valid Log-In to get a Session Token.\n    \n2. Run required route with Authorizatioin as Bearer Token with the session token assigned as the token.\n    \n\nOn re-loading the back-end, authorization is to be done again."
+		}
+	]
+}

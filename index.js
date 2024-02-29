@@ -18,6 +18,19 @@ app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(session({ secret: "secret-key", resave: false, saveUninitialized: false }));
 
+// Middleware to authenticate bearer token
+function authenticateToken(req, res, next) {
+    const bearerHeader = req.headers['authorization'];
+    if (typeof bearerHeader !== 'undefined') {
+        const bearerToken = bearerHeader.split(' ')[1];
+        req.token = bearerToken;
+        next();
+    } else {
+        // If no bearer token provided
+        res.status(401).json({'message': 'Unauthorized'});
+    }
+}
+
 const server = http.createServer(app);
 dotenv.config();
 
@@ -29,6 +42,18 @@ const pool = new Pool({
 // Function to handle hashing
 function hashPassword(password) {
   return crypto.createHash("sha512").update(password).digest("hex");
+}
+
+function generateSessionToken() {
+    return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+}
+
+if (!session.tokens) {
+    session.tokens = []; // Initialize session tokens array if it's not already defined
+}
+
+if (!session.users) {
+    session.users = {}; // Initialize session users object if it's not already defined
 }
 
 const port = process.env.PORT || 4502;
@@ -55,29 +80,21 @@ app.route("/login").all(async (req, res) => {
 
         const client = await pool.connect();
 
-        if (username.includes("DOC")) {
-            const doc_data = await client.query("SELECT * FROM doctor WHERE id = $1", [username]);
-            if (doc_data.rows.password === hashPassword(password)) {
-                session.logged_in = true;
-                session.logged_in_as = "doctor";
-                const pat = data_stub_instance.get_doctor_patients(cursor, username);
-                const pats = pat.map(item => item[0]);
-                const User = { type: "Doctor", category: doc_data[0], ID: doc_data[1], fullName: doc_data[2], PassHash: doc_data[3], PFP: doc_data[4], patients: pats };
-                session.user = JSON.stringify(User);
-                return 'welcome doc' // res.redirect("/doctor_home");
-            }
-        } else if (username.includes("PAT")) {
+        if (username.includes("PAT")) {
             const pat_data = await client.query("SELECT * FROM patients WHERE id = $1", [username]);
             let mypass = pat_data.rows[0].contact.replace("+91", "").split(" ")[1].trim();
             mypass = hashPassword(mypass);
-            console.log(mypass, hashPassword(password), mypass === hashPassword(password))
             if (mypass === hashPassword(password)) {
-                session.logged_in = true;
-                session.patient = true;
-                session.logged_in_as = "patient";
+                const sessionToken = generateSessionToken();
+                session.tokens.push(sessionToken);
                 const User = pat_data;
-                session.user = JSON.stringify(User);
-                res.json({'message':'welcome pat'})
+                session.users[sessionToken] = JSON.stringify(User);
+                session.users[sessionToken].logged_in = true;
+                session.users[sessionToken].patient = true;
+                session.users[sessionToken].logged_in_as = "patient";
+                res.json({'message':'welcome pat', 'sessionToken': sessionToken})
+            } else {
+                res.json({"message":"invalid password"})
             }
         } else {
             res.json({'message':'invalid login'})
@@ -91,6 +108,19 @@ app.route("/login").all(async (req, res) => {
   }
 });
 
+// Define a new route to get patient details
+app.get('/patient/details', authenticateToken, (req, res) => {
+    const sessionToken = req.token;
+
+    // Check if session token exists in session tokens
+    if (session.tokens.includes(sessionToken)) {
+        // Retrieve patient details from session
+        const patientDetails = JSON.parse(session.users[sessionToken]);
+        res.json(patientDetails.rows[0]);
+    } else {
+        res.status(403).json({'message': 'Forbidden'});
+    }
+});
 
 app.listen(port, function(){
     console.log("Express.js app listening on port " + port);
