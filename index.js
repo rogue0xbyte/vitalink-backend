@@ -21,7 +21,7 @@ app.use(session({
 
 // Function to handle hashing
 function hashPassword(password) {
-    return crypto.createHash("sha512").update(password).digest("hex");
+    return crypto.createHash("sha512").update(password, 'utf-8').digest("hex");
 }
 
 function generateSessionToken() {
@@ -56,6 +56,31 @@ app.post("/login", async (req, res) => {
                 const User = patDeet;
                 req.session.users[sessionToken] = { ...User, logged_in: true, patient: true, logged_in_as: "patient" };
                 res.json({ message: 'Welcome pat', sessionToken: sessionToken });
+            } else {
+                res.json({ message: "Invalid password" });
+            }
+        } else if (username.includes("DOC")) {
+            const { readDoctorByID } = await import('./services/databasepg.mjs');
+            const docDeet = await readDoctorByID(username);
+            
+            // Ensure patient details are retrieved successfully
+            if (!docDeet) {
+                return res.json({ message: "Invalid username" });
+            }
+
+            const hashword = await hashPassword(password);
+            console.log(docDeet.passhash);
+            console.log(hashword);
+
+            if (hashword === docDeet.passhash) {
+                const sessionToken = generateSessionToken();
+                // Initialize session properties if not already initialized
+                req.session.tokens = req.session.tokens || [];
+                req.session.users = req.session.users || {};
+                req.session.tokens.push(sessionToken);
+                const User = docDeet;
+                req.session.users[sessionToken] = { ...User, logged_in: true, patient: true, logged_in_as: "patient" };
+                res.json({ message: 'Welcome doc', sessionToken: sessionToken });
             } else {
                 res.json({ message: "Invalid password" });
             }
