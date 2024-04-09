@@ -1,16 +1,16 @@
-import pg from 'pg';
+import pkg from 'pg';
+const { Client } = pkg;
 
-const { Client } = pg;
+
+// Connection string
 
 const client = new Client({
-    host: "localhost",
-    user: "postgres",
-    port: 8080, // default port for PostgreSQL
-    password: "1234",
-    database: "postgres",
-    connectionTimeoutMillis: 5000, // 5 seconds connection timeout
-    query_timeout: 10000, // 10 seconds query timeout
-});
+  user: 'postgres',
+  host: 'db.inr.intellx.in',
+  database: 'vitalink',
+  password: 'inr_db',
+  port: 5432,
+})
 
 
 /*const { Pool } = pg;  the functions are not executed in chronological order , they are executed paralelly, which is an issue if 'pool' is used
@@ -27,37 +27,37 @@ const pool = new Pool({
 });*/
 
 // Function to connect to the database
-async function connectToDatabase() {
-    try {
-        await client.connect();
-        console.log("Successfully connected to Client");
-    } catch (err) {
-        console.error(err.message);
-    }
+export const connectToDatabase = async () => {
+    client.connect()
+      .then(() => {
+        console.log('Connected to PostgreSQL database');
+        // You can perform database operations here
+      })
+      .catch(error => console.error('Error connecting to PostgreSQL database', error));
 }
 
 // Function to close the database connection and terminate the program
-async function closeConnectionAndTerminate() {
-    try {
-        await client.end();
-        console.log("Connection closed successfully");
-        process.exit(0); // Terminate the program with exit code 0
-    } catch (err) {
-        console.error("Error closing connection:", err.message);
-        process.exit(1); // Terminate the program with exit code 1 (indicating an error)
-    }
-}
+// export const closeConnectionAndTerminate = async () =>  {
+//     try {
+//         await client.end();
+//         console.log("Connection closed successfully");
+//         process.exit(0); // Terminate the program with exit code 0
+//     } catch (err) {
+//         console.error("Error closing connection:", err.message);
+//         process.exit(1); // Terminate the program with exit code 1 (indicating an error)
+//     }
+// }
 
 
 
 // Clear the timeout if any activity occurs (e.g., database operation)
-function resetTimeout() {
-    clearTimeout(timeoutId); // Clear the previous timeout
-    // Set a new timeout
-    timeoutId = setTimeout(closeConnectionAndTerminate, timeoutMillis);
-}
+// function resetTimeout() {
+//     clearTimeout(timeoutId); // Clear the previous timeout
+//     // Set a new timeout
+//     timeoutId = setTimeout(closeConnectionAndTerminate, timeoutMillis);
+// }
 
-async function createTables() {
+export const createTables = async () =>  {
     try {
         
       
@@ -185,7 +185,7 @@ async function createTables() {
         console.error(err.message);
     } 
 }
-async function dropAllTables() {
+export const dropAllTables = async () =>  {
     try {
        
 
@@ -229,7 +229,7 @@ async function dropAllTables() {
         console.error("Error dropping tables:", err.message);
     } 
 }
-async function createDoctor(category, ID, fullName, passHash, PFP) {
+export const createDoctor = async (category, ID, fullName, passHash, PFP) => {
     //let client;
     try {
         //client = await pool.connect();
@@ -253,7 +253,7 @@ async function createDoctor(category, ID, fullName, passHash, PFP) {
     }*/
 }
 
-async function readDoctorByID(ID) {
+export const readDoctorByID = async (ID) => {
     //let client;
     try {
         //client = await pool.connect();
@@ -278,7 +278,7 @@ async function readDoctorByID(ID) {
         }
     }*/
 }
-async function readAllDoctors() {
+export const readAllDoctors = async () =>  {
     //let client;
     try {
         //client = await pool.connect();
@@ -304,7 +304,7 @@ async function readAllDoctors() {
     }*/
 }
 
-async function updateDoctor(ID, category, fullName, passHash, PFP) {
+export const updateDoctor = async (ID, category, fullName, passHash, PFP) => {
 
     try {
         
@@ -330,7 +330,7 @@ async function updateDoctor(ID, category, fullName, passHash, PFP) {
     } 
 }
 
-async function deleteDoctor(ID) {
+export const deleteDoctor = async (ID) => {
     //let client;
     try {
         //client = await pool.connect();
@@ -358,7 +358,7 @@ async function deleteDoctor(ID) {
     }*/
 }
 
-async function createIT(ID, fullName, passHash, PFP) {
+export const createIT = async (ID, fullName, passHash, PFP) => {
     try {
         
 
@@ -377,7 +377,7 @@ async function createIT(ID, fullName, passHash, PFP) {
     } 
 }
 
-async function readITByID(ID) {
+export const readITByID = async (ID) => {
     try {
         
 
@@ -399,7 +399,7 @@ async function readITByID(ID) {
     } 
 }
 
-async function updateIT(ID, fullName, passHash, PFP) {
+export const updateIT = async (ID, fullName, passHash, PFP) => {
     try {
         
 
@@ -424,7 +424,7 @@ async function updateIT(ID, fullName, passHash, PFP) {
     } 
 }
 
-async function deleteIT(ID) {
+export const deleteIT = async (ID) => {
     try {
         
 
@@ -447,7 +447,7 @@ async function deleteIT(ID) {
     } 
 }
 
-async function createPatient(patientData) {
+export const createPatient = async (patientData) => {
     try {
         
 
@@ -466,7 +466,7 @@ async function createPatient(patientData) {
     } 
 }
 
-async function readPatientByID(ID) {
+export const readPatientByID = async (ID) => {
     try {
         
 
@@ -477,17 +477,17 @@ async function readPatientByID(ID) {
         const result = await client.query(query, [ID]);
 
         if (result.rows.length > 0) {
-            console.log("Patient found:", result.rows[0]);
+            // console.log("Patient found:", result.rows[0]);
             return result.rows[0];
         } else {
-            console.log("Patient not found with ID:", ID);
+            // console.log("Patient not found with ID:", ID);
             return null;
         }
     } catch (err) {
         console.error("Error reading patient:", err.message);
     } 
 }
-async function readDoctorPatients(DoctorID) {
+export const readDoctorPatients = async (DoctorID) => {
     try {
         
 
@@ -508,7 +508,7 @@ async function readDoctorPatients(DoctorID) {
         console.error("Error reading patient:", err.message);
     } 
 }
-async function readMaxPatient() {
+export const readMaxPatient = async () =>  {
     try {
         
 
@@ -529,7 +529,7 @@ async function readMaxPatient() {
     } 
 }
 
-async function updatePatient(Name, Contact, KinName, KinContact, Age, Gender, DrugType, DrugStrength, BeforeFood, AfterFood, Morning, Afternoon, Night, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday, MisdoseAlert, NextTestDate, StartDate, TargetINR, MinINR, MaxINR, StoppageReason, Doctor_ID, CareTaker_ID, stopped, EndDate,ID) {
+export const updatePatient = async (Name, Contact, KinName, KinContact, Age, Gender, DrugType, DrugStrength, BeforeFood, AfterFood, Morning, Afternoon, Night, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday, MisdoseAlert, NextTestDate, StartDate, TargetINR, MinINR, MaxINR, StoppageReason, Doctor_ID, CareTaker_ID, stopped, EndDate,ID) => {
     try {
         
 
@@ -553,7 +553,7 @@ async function updatePatient(Name, Contact, KinName, KinContact, Age, Gender, Dr
         console.error("Error updating patient:", err.message);
     } 
 }
-async function updatePatientDrugs(DrugType, DrugStrength, BeforeFood, AfterFood, Morning, Afternoon, Night, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday, ID) {
+export const updatePatientDrugs = async (DrugType, DrugStrength, BeforeFood, AfterFood, Morning, Afternoon, Night, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday, ID) =>  {
     try {
         
 
@@ -577,7 +577,7 @@ async function updatePatientDrugs(DrugType, DrugStrength, BeforeFood, AfterFood,
         console.error("Error updating patient:", err.message);
     } 
 }
-async function togMedSchedPatient(StoppageReason, stopped, EndDate,ID) {
+export const togMedSchedPatient = async (StoppageReason, stopped, EndDate,ID) => {
     try {
         
 
@@ -601,7 +601,7 @@ async function togMedSchedPatient(StoppageReason, stopped, EndDate,ID) {
         console.error("Error updating patient:", err.message);
     } 
 }
-async function updatePatientDoctor(Doctor_ID) {
+export const updatePatientDoctor = async (Doctor_ID) => {
     try {
         
 
@@ -624,7 +624,7 @@ async function updatePatientDoctor(Doctor_ID) {
         console.error("Error updating patient:", err.message);
     } 
 }
-async function updatePatientCaretaker(ID,CareTakerID) {
+export const updatePatientCaretaker = async (ID, CareTakerID) => {
     try {
         
 
@@ -647,7 +647,7 @@ async function updatePatientCaretaker(ID,CareTakerID) {
         console.error("Error updating patient:", err.message);
     } 
 }
-async function deletePatient(ID) {
+export const deletePatient = async (ID) => {
     try {
         
 
@@ -669,7 +669,7 @@ async function deletePatient(ID) {
         console.error("Error deleting patient:", err.message);
     } 
 }
-async function createINRLevel(Level, DateTime, Patient_ID, File_ID) {
+export const createINRLevel = async (Level, DateTime, Patient_ID, File_ID) => {
     try {
         
 
@@ -688,7 +688,7 @@ async function createINRLevel(Level, DateTime, Patient_ID, File_ID) {
     } 
 }
 
-async function readINRLevelByID(Patient_ID) {
+export const readINRLevelByID = async (Patient_ID) => {
     try {
         
 
@@ -709,7 +709,7 @@ async function readINRLevelByID(Patient_ID) {
         console.error("Error reading INR Level:", err.message);
     } 
 }
-async function readTodayaINRLevelByID(Patient_ID) {
+export const readTodayaINRLevelByID = async (Patient_ID) => {
     try {
         const moment = require('moment-timezone');
 
@@ -741,7 +741,7 @@ async function readTodayaINRLevelByID(Patient_ID) {
     } 
 }
 
-async function updateINRLevel(Level, DateTime, File_ID, Patient_ID) {
+export const updateINRLevel = async (Level, DateTime, File_ID, Patient_ID) => {
     try {
         
 
@@ -766,7 +766,7 @@ async function updateINRLevel(Level, DateTime, File_ID, Patient_ID) {
     } 
 }
 
-async function deleteINRLevel(Patient_ID) {
+export const deleteINRLevel = async (Patient_ID) => {
     try {
         
 
@@ -788,7 +788,7 @@ async function deleteINRLevel(Patient_ID) {
         console.error("Error deleting INR Level:", err.message);
     } 
 }
-async function createDosage(Drug_Name,DateTime,Strength,Remark,Patient_ID,StartDate,EndDate,File_ID,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday) {
+export const createDosage = async (Drug_Name,DateTime,Strength,Remark,Patient_ID,StartDate,EndDate,File_ID,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday) => {
     try {
         
 
@@ -807,7 +807,7 @@ async function createDosage(Drug_Name,DateTime,Strength,Remark,Patient_ID,StartD
     } 
 }
 
-async function readDosageByID(Patient_ID) {
+export const readDosageByID = async (Patient_ID) => {
     try {
         
 
@@ -829,7 +829,7 @@ async function readDosageByID(Patient_ID) {
     } 
 }
 
-async function updateDosage(Drug_Name,DateTime,Strength,Remark,StartDate,EndDate,File_ID,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday,Patient_ID) {
+export const updateDosage = async (Drug_Name,DateTime,Strength,Remark,StartDate,EndDate,File_ID,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday,Patient_ID) => {
     try {
         
 
@@ -854,7 +854,7 @@ async function updateDosage(Drug_Name,DateTime,Strength,Remark,StartDate,EndDate
     } 
 }
 
-async function deleteDosage(Patient_ID) {
+export const deleteDosage = async (Patient_ID) => {
     try {
         
 
@@ -876,7 +876,7 @@ async function deleteDosage(Patient_ID) {
         console.error("Error deleting dosage:", err.message);
     } 
 }
-async function createReport(Type, Details, Patient_ID, DateTime, startdate, enddate, Location, LabName, File_ID) {
+export const createReport = async (Type, Details, Patient_ID, DateTime, startdate, enddate, Location, LabName, File_ID) => {
     try {
         
 
@@ -895,7 +895,7 @@ async function createReport(Type, Details, Patient_ID, DateTime, startdate, endd
     } 
 }
 
-async function readReportByID(Patient_ID) {
+export const readReportByID = async (Patient_ID) => {
     try {
         
 
@@ -916,7 +916,7 @@ async function readReportByID(Patient_ID) {
         console.error("Error reading report:", err.message);
     } 
 }
-async function readMedicalHistory(Patient_ID) {
+export const readMedicalHistory = async (Patient_ID) => {
     try {
         
 
@@ -937,7 +937,7 @@ async function readMedicalHistory(Patient_ID) {
         console.error("Error reading report:", err.message);
     } 
 }
-async function updateReport(Patient_ID, type, details, patient_id, datetime, startdate, enddate, location, labname, file_id) {
+export const updateReport = async (Patient_ID, type, details, patient_id, datetime, startdate, enddate, location, labname, file_id) => {
     try {
         
 
@@ -962,7 +962,7 @@ async function updateReport(Patient_ID, type, details, patient_id, datetime, sta
     } 
 }
 
-async function deleteReport(Patient_ID) {
+export const deleteReport = async (Patient_ID) => {
     try {
         
 
@@ -984,7 +984,7 @@ async function deleteReport(Patient_ID) {
         console.error("Error deleting report:", err.message);
     } 
 }
-async function createFile(fileName, filePath, type) {
+export const createFile = async (fileName, filePath, type) => {
     try {
         
 
@@ -1003,7 +1003,7 @@ async function createFile(fileName, filePath, type) {
     } 
 }
 
-async function readFileByID(ID) {
+export const readFileByID = async (ID) => {
     try {
         
 
@@ -1024,7 +1024,7 @@ async function readFileByID(ID) {
         console.error("Error reading file:", err.message);
     } 
 }
-async function getFileID(filename) {
+export const getFileID = async (filename) => {
     try {
         
         //This is to get the ID form the files table of the currently stored file to store in other table with FileID field
@@ -1046,7 +1046,7 @@ async function getFileID(filename) {
     } 
 }
 
-async function updateFile(ID, fileName, filePath, type) {
+export const updateFile = async (ID, fileName, filePath, type) => {
     try {
         
 
@@ -1071,7 +1071,7 @@ async function updateFile(ID, fileName, filePath, type) {
     } 
 }
 
-async function deleteFile(ID) {
+export const deleteFile = async (ID) => {
     try {
         
 
@@ -1093,7 +1093,7 @@ async function deleteFile(ID) {
         console.error("Error deleting file:", err.message);
     } 
 }
-async function closeConnection() {
+export const closeConnection = async () =>  {
     try {
         await client.end();
         console.log("Connection closed successfully");
@@ -1103,7 +1103,7 @@ async function closeConnection() {
 }
 
 
-async function getDosageFile(ID) {
+export const getDosageFile = async (ID) => {
     try {
         
         //This is to get the ID form the files table of the currently stored file to store in other table with FileID field
@@ -1125,7 +1125,7 @@ async function getDosageFile(ID) {
     } 
 }
 
-async function getINRFile(ID) {
+export const getINRFile = async (ID) => {
     try {
         
         //This is to get the ID form the files table of the currently stored file to store in other table with FileID field
@@ -1147,7 +1147,7 @@ async function getINRFile(ID) {
     } 
 }
 
-async function getReportsFile(ID) {
+export const getReportsFile = async (ID) => {
     try {
         
         //This is to get the ID form the files table of the currently stored file to store in other table with FileID field
@@ -1170,12 +1170,11 @@ async function getReportsFile(ID) {
 }
 //createTables();
 // Connect to the database
-export { connectToDatabase, closeConnectionAndTerminate, resetTimeout, createTables, dropAllTables, createDoctor, readDoctorByID, readAllDoctors, updateDoctor, deleteDoctor, createIT, readITByID, updateIT, deleteIT, createPatient, readPatientByID, readDoctorPatients, readMaxPatient, updatePatient, updatePatientDrugs, togMedSchedPatient, updatePatientDoctor, updatePatientCaretaker, deletePatient, createINRLevel, readINRLevelByID, readTodayaINRLevelByID, updateINRLevel, deleteINRLevel, createDosage, readDosageByID, updateDosage, deleteDosage, createReport, readReportByID,readMedicalHistory, updateReport, deleteReport, createFile, readFileByID, getFileID, updateFile, deleteFile, getReportsFile, getINRFile, getDosageFile, closeConnection };
 connectToDatabase();
 
 // Set a timeout to close the connection and terminate the program after 30 seconds of inactivity
-const timeoutMillis = 3000; // 3 seconds
-const timeoutId = setTimeout(closeConnectionAndTerminate, timeoutMillis);
+// const timeoutMillis = 3000; // 3 seconds
+// const timeoutId = setTimeout(closeConnectionAndTerminate, timeoutMillis);
 //JUST call the functions after this , no need to call close after that
 
 //readAllDoctors();
