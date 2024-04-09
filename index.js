@@ -98,6 +98,16 @@ app.post("/login", async (req, res) => {
     app.use(patientDetail);
 })();
 
+(async () => {
+    const { reassignCaretaker } = await import('./components/doctor/reassign_caretaker.mjs');
+    app.use(reassignCaretaker);
+})();
+
+(async () => {
+    const { viewPatientDetail } = await import('./components/doctor/view_patient_detail.mjs');
+    app.use(viewPatientDetail);
+})();
+
 // Start the server
 const port = process.env.PORT || 4502;
 const server = http.createServer(app);
