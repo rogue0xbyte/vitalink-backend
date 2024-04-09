@@ -7,7 +7,7 @@ import { authenticateToken } from '../../services/middlewares.mjs';
 const patientDetail = Router();
 
 // Define a new route to get patient details
-patientDetail.get('/details', authenticateToken, async (req, res) => {
+patientDetail.get('/patient/details', authenticateToken, async (req, res) => {
     const sessionToken = req.token;
     try{
         // Check if session token exists in session tokens
