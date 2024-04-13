@@ -686,7 +686,7 @@ export const deletePatient = async (ID) => {
         console.error("Error deleting patient:", err.message);
     } 
 }
-export const createINRLevel = async (Level, DateTime, Patient_ID, File_ID) => {
+export const createINRLevel = async (Level, DateTime, File_ID, Patient_ID) => {
     try {
         
 
@@ -726,6 +726,40 @@ export const readINRLevelByID = async (Patient_ID) => {
         console.error("Error reading INR Level:", err.message);
     } 
 }
+
+export const readTodayINRLevels = async (Doctor_ID) => {
+    try {
+
+        const query = `
+                SELECT i.id AS inr_id,
+                       i.level,
+                       i.location,
+                       i.labname,
+                       i.datetime,
+                       f.filename,
+                       f.filepath,
+                       f.type,
+                       p.name AS patient_name
+                FROM inr_levels i
+                JOIN patients p ON i.patient_id = p.id
+                LEFT JOIN files f ON i.file_id = f.id
+                WHERE LEFT(i.datetime, 10) = TO_CHAR(CURRENT_DATE, 'YYYY-MM-DD')
+                AND p.doctor_id = $1;
+        `;
+        const result = await client.query(query, [Doctor_ID]);
+
+        if (result.rows.length > 0) {
+            console.log("INR Level found:", result.rows);
+            return result.rows;
+        } else {
+            console.log("INR Level not found with ID:", Patient_ID);
+            return null;
+        }
+    } catch (err) {
+        console.error("Error reading INR Level:", err.message);
+    } 
+}
+
 export const readTodayaINRLevelByID = async (Patient_ID) => {
     try {
 
@@ -769,8 +803,8 @@ export const updateINRLevel = async (Level, DateTime, File_ID, Patient_ID) => {
 
         const query = `
             UPDATE inr_levels
-            SET Level = $1, DateTime = $2, Patient_ID = $3, File_ID = $4
-            WHERE Patient_ID = $5
+            SET Level = $1, DateTime = $2, File_ID = $3
+            WHERE Patient_ID = $4
             RETURNING *
         `;
         const values = [Level, DateTime, File_ID, Patient_ID];
@@ -820,6 +854,7 @@ export const createDosage = async (Drug_Name,DateTime,Strength,Remark,Patient_ID
             RETURNING *
         `;
         const values = [Drug_Name,DateTime,Strength,Remark,Patient_ID,StartDate,EndDate,File_ID,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday];
+        console.log(Patient_ID);
         const result = await client.query(query, values);
 
         console.log("Dosage created successfully:", result.rows[0]);
@@ -850,6 +885,98 @@ export const readDosageByID = async (Patient_ID) => {
         console.error("Error reading dosage:", err.message);
     } 
 }
+
+export const getMissedDosages = async (Patient_ID) => {
+    // Assuming you have functions readDosageByID(patientId) and readPatientByID(patientId) to retrieve dosages and patient details respectively asynchronously
+
+    // Call readDosageByID to get the dosages for the specified Patient_ID
+    const dosages = await readDosageByID(Patient_ID);
+
+    // Call readPatientByID to get the patient details for the specified Patient_ID
+    const patientDetails = await readPatientByID(Patient_ID);
+
+    // Define helper functions to get unique dates and past seven days
+    const getUniqueDates = (dosages) => {
+        const uniqueDates = new Set(dosages.map(dosage => new Date(dosage.datetime).toDateString()));
+        return Array.from(uniqueDates);
+    };
+
+    const getPastSevenDays = () => {
+        const today = new Date();
+        const pastSevenDays = [];
+        for (let i = 0; i < 7; i++) {
+            const date = new Date(today);
+            date.setDate(today.getDate() - i);
+            pastSevenDays.push(date.toDateString());
+        }
+        return pastSevenDays;
+    };
+
+    // Define function to find missed dosages
+    const findMissedDosages = (dosages) => {
+        const uniqueDates = getUniqueDates(dosages);
+        const pastSevenDays = getPastSevenDays();
+
+        // Get assigned dosages for each day of the week
+        const assignedDosages = {
+            "Sunday": patientDetails.sunday.trim(),
+            "Monday": patientDetails.monday.trim(),
+            "Tuesday": patientDetails.tuesday.trim(),
+            "Wednesday": patientDetails.wednesday.trim(),
+            "Thursday": patientDetails.thursday.trim(),
+            "Friday": patientDetails.friday.trim(),
+            "Saturday": patientDetails.saturday.trim()
+        };
+
+        // Filter missed dosages considering valid days
+        return pastSevenDays.filter(date => {
+            const day = new Date(date).toLocaleDateString('en-US', { weekday: 'long' });
+            // Check if the day is valid (not empty after trimming) and not in the unique dates
+            console.log(day, assignedDosages[day], (!uniqueDates.includes(date)), assignedDosages[day] !== "" && (!uniqueDates.includes(date)));
+            return assignedDosages[day] !== "" && (!uniqueDates.includes(date));
+        });
+    };
+
+    // Find missed dosages for the given Patient_ID
+    const missedDosages = findMissedDosages(dosages);
+    
+    // Return the list of missed dosages
+    return missedDosages;
+};
+
+export const getMonthlyAverageDosages = async (Patient_ID) => {
+    // Assuming you have functions readDosageByID(patientId) and readPatientByID(patientId) to retrieve dosages and patient details respectively asynchronously
+
+    // Call readDosageByID to get the dosages for the specified Patient_ID
+    const dosages = await readDosageByID(Patient_ID);
+    const monthlyAvg = {};
+
+// Iterate over dosages and calculate monthly averages
+dosages.forEach(dosage => {
+    const datetime = new Date(dosage.datetime.replace('I', ''));
+    console.log(dosage.datetime, datetime);
+    const month = datetime.getMonth()+1; // Get month index (0-11)
+    const year = datetime.getFullYear(); // Get full year
+
+    // Create a key in monthlyAvg if it doesn't exist
+    if (!monthlyAvg[month]) {
+        monthlyAvg[month] = { total: 0, count: 0 };
+    }
+
+    // Add dosage strength to total and increment count
+    monthlyAvg[month].total += parseInt(dosage.strength);
+    monthlyAvg[month].count++;
+});
+
+// Calculate average for each month
+for (const month in monthlyAvg) {
+    const average = monthlyAvg[month].total / monthlyAvg[month].count;
+    monthlyAvg[month] = average;
+}
+
+    // Return the monthly average dosages
+    return monthlyAvg;
+};
 
 export const updateDosage = async (Drug_Name,DateTime,Strength,Remark,StartDate,EndDate,File_ID,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday,Patient_ID) => {
     try {
@@ -898,7 +1025,7 @@ export const deleteDosage = async (Patient_ID) => {
         console.error("Error deleting dosage:", err.message);
     } 
 }
-export const createReport = async (Type, Details, Patient_ID, DateTime, startdate, enddate, Location, LabName, File_ID) => {
+export const createReport = async (Type, DateTime, Details, File_ID, startdate, enddate, Location, LabName, Patient_ID) => {
     try {
         
 

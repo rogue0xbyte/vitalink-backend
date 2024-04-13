@@ -98,6 +98,27 @@ app.post("/login", async (req, res) => {
     app.use(patientDetail);
 })();
 
+
+(async () => {
+    const { patientDosage } = await import('./components/patient/dosages.mjs');
+    app.use(patientDosage);
+})();
+
+(async () => {
+    const { takeDosage } = await import('./components/patient/takedose.mjs');
+    app.use(takeDosage);
+})();
+
+(async () => {
+    const { updateINR } = await import('./components/patient/updateinr.mjs');
+    app.use(updateINR);
+})();
+
+(async () => {
+    const { uploadReport } = await import('./components/patient/report.mjs');
+    app.use(uploadReport);
+})();
+
 (async () => {
     const { reassignCaretaker } = await import('./components/doctor/reassign_caretaker.mjs');
     app.use(reassignCaretaker);
@@ -137,6 +158,13 @@ app.post("/login", async (req, res) => {
     const { patINRFiles } = await import('./components/doctor/get_INR_file.mjs');
     app.use(patINRFiles);
 })();
+
+
+(async () => {
+    const { viewFile } = await import('./components/view_file.mjs');
+    app.use(viewFile);
+})();
+
 // Start the server
 const port = process.env.PORT || 4502;
 const server = http.createServer(app);
