@@ -1,9 +1,9 @@
-import pkg from 'pg';
-const { Client } = pkg;
+import pg from 'pg';
+const { Client } = pg;
+
 
 
 // Connection string
-
 const client = new Client({
   user: 'postgres',
   host: 'db.inr.intellx.in',
@@ -447,9 +447,14 @@ export const deleteIT = async (ID) => {
     } 
 }
 
-export const createPatient = async (patientData) => {
+export const createPatient = async (ID, Name, Contact, KinName, KinContact, Age, Gender, DrugType, DrugStrength, BeforeFood, AfterFood, Morning, Afternoon, Night, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday, MisdoseAlert, NextTestDate, StartDate, TargetINR, MinINR, MaxINR, StoppageReason, Doctor_ID, CareTaker_ID, stopped, EndDate) => {
     try {
-        
+        const now = new Date();
+        const year = now.getFullYear().toString().slice(-2); // Get the last two digits of the year
+        const month = ('0' + (now.getMonth() + 1)).slice(-2); // Add leading zero if month is single digit
+        const date = ('0' + now.getDate()).slice(-2); // Add leading zero if date is single digit
+
+        const ID = `${year}PAT${month}${date}`;
 
         const query = `
             INSERT INTO patients (ID, Name, Contact, KinName, KinContact, Age, Gender, DrugType, DrugStrength, BeforeFood, AfterFood, Morning, Afternoon, Night, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday, MisdoseAlert, NextTestDate, StartDate, TargetINR, MinINR, MaxINR, StoppageReason, Doctor_ID, CareTaker_ID, stopped, EndDate) 
@@ -579,7 +584,19 @@ export const updatePatientDrugs = async (DrugType, DrugStrength, BeforeFood, Aft
 }
 export const togMedSchedPatient = async (StoppageReason, stopped, EndDate,ID) => {
     try {
-        
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        let mm = today.getMonth() + 1; // Months start at 0!
+        let dd = today.getDate();
+
+        if (dd < 10) dd = '0' + dd;
+        if (mm < 10) mm = '0' + mm;
+
+        const currentDate = yyyy + '-' + mm + '-' + dd;
+        const currentDateWithPercentage = currentDate + '%';
+
+        console.log(currentDate);
+        console.log(currentDateWithPercentage);
 
         const query = `
             UPDATE patients
@@ -711,23 +728,28 @@ export const readINRLevelByID = async (Patient_ID) => {
 }
 export const readTodayaINRLevelByID = async (Patient_ID) => {
     try {
-        const moment = require('moment-timezone');
 
         // Assuming IST is 'Asia/Kolkata' time zone
-        const IST = 'Asia/Kolkata';
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        let mm = today.getMonth() + 1; // Months start at 0!
+        let dd = today.getDate();
 
-        const currentDate = moment().tz(IST).format('YYYY-MM-DD');
+        if (dd < 10) dd = '0' + dd;
+        if (mm < 10) mm = '0' + mm;
+
+        const currentDate = yyyy + '-' + mm + '-' + dd;
         const currentDateWithPercentage = currentDate + '%';
 
-        //console.log(currentDate);
-        //console.log(currentDateWithPercentage);
+        console.log(currentDate);
+        console.log(currentDateWithPercentage);
 
 
         const query = `
             SELECT * FROM inr_levels 
-            WHERE Patient_ID = $1 AND (DateTime = $2 OR DateTime LIKE $3)
+            WHERE patient_id = $1 AND datetime = $2
         `;
-        const result = await client.query(query, [Patient_ID,currentDate,currentDateWithPercentage]);
+        const result = await client.query(query, [Patient_ID,currentDate]);
 
         if (result.rows.length > 0) {
             console.log("INR Level found:", result.rows);
