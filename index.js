@@ -159,6 +159,10 @@ app.post("/login", async (req, res) => {
     app.use(patINRFiles);
 })();
 
+(async () => {
+    const { updatePatDosage } = await import('./components/doctor/update_Dosage.mjs');
+    app.use(updatePatDosage);
+})();
 
 (async () => {
     const { viewFile } = await import('./components/view_file.mjs');
