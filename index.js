@@ -165,6 +165,11 @@ app.post("/login", async (req, res) => {
 })();
 
 (async () => {
+    const { toggleTherapy } = await import('./components/doctor/toggleMed.mjs');
+    app.use(toggleTherapy);
+})();
+
+(async () => {
     const { viewFile } = await import('./components/view_file.mjs');
     app.use(viewFile);
 })();

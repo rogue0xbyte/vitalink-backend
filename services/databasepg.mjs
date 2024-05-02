@@ -4,7 +4,7 @@ const { Client } = pg;
 
 
 // Connection string
-const client = new Client({
+export const client = new Client({
   user: 'postgres',
   host: 'db.inr.intellx.in',
   database: 'vitalink',
@@ -987,7 +987,7 @@ export const updateDosage = async (Drug_Name,DateTime,Strength,Remark,StartDate,
             SET Drug_Name = $1, DateTime = $2, Strength = $3, Remark = $4, StartDate = $5, EndDate = $6, File_ID = $7, Monday = $8, Tuesday = $9, Wednesday = $10, Thursday = $11, Friday = $12, Saturday = $13, Sunday = $14
             WHERE Patient_ID = $15
             RETURNING *
-        `;
+        `;  
         const values = [Drug_Name,DateTime,Strength,Remark,StartDate,EndDate,File_ID,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday,Patient_ID];
         const result = await client.query(query, values);
 
