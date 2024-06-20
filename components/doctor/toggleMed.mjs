@@ -12,12 +12,11 @@ toggleTherapy.put('/doctor/patient/toggle-therapy/:Patient_ID', async (req, res)
         const { stopped, StoppageReason, EndDate, Patient_ID } = req.body; // Extract other properties from request body
 
         // Retrieve patient dosage from the database
-        const patientDosage = await readDosageByID(Patient_ID);
-
-        if (!patientDosage) {
-            res.status(404).json({ message: `Dosage not found with ID: ${Patient_ID}` });
-            return;
-        }
+        const patDos = await readDosageByID(Patient_ID);
+        const patientDosage = patDos[0];
+        console.log("LALALALAIAMGAYLALALALA\n", patientDosage, "LALALAIAMNOTGAYANYMORELALALALA\n");
+        patientDosage.Patient_ID = patientDosage.patient_id;
+        
 
         // Toggle therapy based on the stopped attribute
         if (stopped) {
